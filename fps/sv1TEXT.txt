@@ -1,0 +1,79 @@
+interface bullet {
+    direction: number,
+    obj: game.LedSprite;
+}
+
+let player = game.createSprite(2, 5);
+let ememies: game.LedSprite[] = [];
+let bullets: bullet[] = [];
+let die = false;
+let used = false;
+
+for (let i = 0; i < 4; i++) {
+    ememies.push(game.createSprite(Math.random(6), 0));
+}
+for (let i = 0; i < ememies.length; i++) {
+    ememies[i].setBrightness(2);
+}
+game.startCountdown(1000 * 60);
+basic.forever(() => {
+    for (let i = 0; i < bullets.length; i++) {
+        bullets[i].obj.changeYBy(bullets[i].direction);
+        if (bullets[i].direction === -1) { //player fired it
+            for (let j = 0; j < ememies.length; j++) {
+                if (bullets[i].obj.x() === ememies[j].x() && bullets[i].obj.y() === ememies[j].y()) {
+                    ememies[j].delete();
+                    ememies.splice(j, 1);
+                }
+            }
+            if (bullets[i].obj.y() <= 0) {
+                bullets[i].obj.delete();
+                bullets.splice(i, 1);
+            }
+        } else if (bullets[i].direction === 1) { // ememies fired it
+            if (bullets[i].obj.x() === player.x() && bullets[i].obj.y() === player.y()) {
+                player.delete();
+                game.gameOver();
+            }
+            if (bullets[i].obj.y() >= 4) {
+                bullets[i].obj.delete();
+                bullets.splice(i, 1);
+            }
+        }
+    }
+
+    for (let i = 0; i < ememies.length; i++) {
+        if (Math.random(50) === 1) {
+            ememies[i].changeXBy(-1);
+        } else if (Math.random(50) === 1) {
+            ememies[i].changeXBy(1);
+        } else if (Math.random(10) === 1) {
+            bullets.push({ direction: 1, obj: game.createSprite(ememies[i].x(), ememies[i].y()) });
+        }
+    }
+
+    basic.pause(400);
+})
+
+input.onButtonPressed(Button.A, () => {
+    player.changeXBy(-1);
+})
+
+input.onButtonPressed(Button.B, () => {
+    player.changeXBy(1);
+})
+
+input.onButtonPressed(Button.AB, () => {
+    bullets.push({ direction: -1, obj: game.createSprite(player.x(), player.y()) });
+})
+
+input.onShake(() => {
+    if (!used) {
+        basic.showString("B");
+        basic.pause(1000);
+        for (let i = 0; i < 3; i++) {
+            ememies[Math.random(ememies.length) - 1].delete();
+        }
+        used = true;
+    }
+})
